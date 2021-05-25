@@ -1,0 +1,18 @@
+npx sequelize-cli db:migrate --from 20210523160643-create-inventory.js --to 20210523160643-create-inventory.js
+
+--from will skip the filename and start from the next filename
+
+npx sequelize-cli db:migrate --from 20210426172128-create-conversation.js
+
+npx sequelize-cli db:migrate
+
+npx sequelize-cli db:migrate:undo:all
+
+Admin - Sheri
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbEFkZHJlc3MiOiJzaGVyaWZAZ21haWwuY29tIiwidXNlcklkIjoiNGVmMDNjYTctYjU1OS00OTQwLTk5YzEtZDc1NDQ5OGJjYjliIiwiaWF0IjoxNjIxODc4MzQwfQ.iTOeHE2408XKAo54muIs-vMM-x5pGn9_tbn7ix7Achc
+
+Consultant  - Hawa
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbEFkZHJlc3MiOiJoYXdhQGdtYWlsLmNvbSIsInVzZXJJZCI6ImZkZTM5ZDE3LWI5M2UtNDdkMi1hNTQwLWVlMzlkYmFiYjFlYiIsImlhdCI6MTYyMTg3ODQxMX0.NdsHadwuODVOtb8vIn_n0FUTUdbiN_niUuvzW2hcmM8
+
+Customer  - Yusuf
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbEFkZHJlc3MiOiJ5eXVzdWZAZ21haWwuY29tIiwidXNlcklkIjoiOTJhZTFiMjctMWVhNi00ODE1LThmOGQtMDhlYTY1MDczOThhIiwiaWF0IjoxNjIxODc3NDY3fQ.VImFaMdiOaM_u6q8Fde0IjnYMzxv70ME9l2j-9tF7Qo
