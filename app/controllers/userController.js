@@ -87,6 +87,7 @@ exports.add_new_customer = async (req,res,next)=>{
             phone: "required|phoneNumber"
         })
         const matched = await v.check()
+        console.log(req.body)
         if(!matched){
             return res.status(412).json({
                 message:'Invalid Data Input'
