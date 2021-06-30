@@ -27,6 +27,9 @@ module.exports = (sequelize, DataTypes) => {
     productMeasure: {
       type: DataTypes.STRING(240),allowNull: false
     },
+    productPercent:{
+      type: DataTypes.DECIMAL(15,2), defaultValue:0
+    },
     productPrice: {
       type: DataTypes.DECIMAL(15,2), defaultValue:0
     },

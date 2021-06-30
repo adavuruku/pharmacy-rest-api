@@ -5,7 +5,7 @@ const argon2 = require('argon2')
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
 
-const {UsersInformation,InventoryCategory,Inventory,TransactionReceipt,Transaction,DeliveryLocation} = require('../../models/index');
+const {UsersInformation,InventoryCategory,WishList,Inventory,TransactionReceipt,Transaction,DeliveryLocation} = require('../../models/index');
 
 let generateToken = (email,userId) =>{
     return jwt.sign({
@@ -15,6 +15,7 @@ let generateToken = (email,userId) =>{
     process.env.MY_HASH_SECRET);
 }
 var cloudinary = require('cloudinary').v2;
+
 
 cloudinary.config = ({
     cloud_name:process.env.CLOUDINARY_CLOUD_NAME,
@@ -119,6 +120,100 @@ exports.add_new_customer = async (req,res,next)=>{
     }
 }
 
+exports.update_user_information = async (req,res,next)=>{
+    try {
+        // console.log(req.body)
+        const v = new Validator(req.body, {
+            firstName: "required|string",
+            lastName: "required|string",
+            phone: "required|string",
+        })
+        
+        const matched = await v.check()
+        if(matched){
+            let userInformation = await UsersInformation.update({ 
+                firstName:req.body.firstName, lastName:req.body.lastName,phone:req.body.phone
+                }, {where: {userId: req.userInfo.userId},returning: true})
+            return res.status(200).json({
+                message:'Successful',userInformation:userInformation[1][0]
+            });
+        }
+        return res.status(422).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
+}
+
+exports.update_user_password = async (req,res,next)=>{
+    try {
+        const v = new Validator(req.body, {
+            password: "required|string",
+            currentPassword: "required|string"
+        })
+        
+        const matched = await v.check()
+        if(matched){
+            let userExist = await UsersInformation.findOne({ where: {userId: req.userInfo.userId}})
+            if(userExist){
+                let hash = await argon2.verify(userExist.password, req.body.currentPassword)
+                if(hash){
+                    let hashVerificationCode = await argon2.hash(req.body.password,process.env.MY_ARGON_SALT)
+                    let userInformation = await UsersInformation.update({ 
+                        password:hashVerificationCode
+                        }, {where: {userId: req.userInfo.userId},returning: true})
+                    return res.status(200).json({
+                        message:'Successful',userInformation:userInformation[1][0]
+                    });
+                }
+            }
+        }
+        return res.status(422).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
+}
+
+exports.admin_update_user_role = async (req,res,next)=>{
+    // try {
+        // console.log(req.body)
+        const v = new Validator(req.body, {
+            email: "required|string",
+            userId: "required|string",
+            status: "required|boolean",
+            isAdmin: "required|boolean",
+            isConsultant: "required|boolean",
+        })
+        
+        const matched = await v.check()
+        if(matched){
+            let userInformation = await UsersInformation.update({ 
+                status:req.body.status, isAdmin:req.body.isAdmin,isConsultant:req.body.isConsultant
+                }, {where: {email: req.body.email, userId:req.body.userId},returning: true})
+            return res.status(200).json({
+                message:'Successful',userInformation:userInformation[1][0]
+            });
+        }
+        return res.status(422).json({
+            message:'Fail'
+        });
+    // } catch (error) {
+    //     return res.status(500).json({
+    //         message:'Fail',
+    //         error:error
+    //     });
+    // }
+}
+
 exports.login_user = async (req,res,next)=>{
     // console.log('>> ',process.env.MY_HASH_SECRET)
     try {
@@ -195,6 +290,7 @@ exports.add_product_to_category = async (req,res,next)=>{
             productDescription: "required|string",
             productPrice: "required|decimal",
             productCategory: "required|string",
+            productPercent: "required|decimal",
         })
         const v2 = new Validator(req.files, {
             productImage: "required|mime:jpg,png,jpeg|size:55500kb"
@@ -218,6 +314,7 @@ exports.add_product_to_category = async (req,res,next)=>{
                     productDescription : req.body.productDescription.trim(),
                     productPrice : req.body.productPrice.trim(),
                     productImage : fileUpload.secure_url,
+                    productPercent:req.body.productPercent,
                     productCategory : req.body.productCategory.trim(),
                     inventoryId
                 });
@@ -265,9 +362,10 @@ exports.update_product = async (req,res,next)=>{
                 let productDescription = req.body.productDescription? req.body.productDescription.trim() : productExist.productDescription
                 let productPrice = req.body.productPrice? req.body.productPrice.trim() : productExist.productPrice
                 let productCategory = req.body.productCategory? req.body.productCategory.trim() : productExist.productCategory
+                let productPercent = req.body.productPercent? req.body.productPercent.trim() : productExist.productPercent
 
                 let updatedRecord = await Inventory.update({ 
-                    productImage: productUrl,productName, productMeasure, productDescription, productPrice, productCategory
+                    productImage: productUrl,productName, productMeasure, productDescription, productPrice, productCategory,productPercent
                   }, {
                     where: {inventoryId: req.body.productId.trim()},
                     returning: true,
@@ -305,7 +403,7 @@ exports.update_category = async (req,res,next)=>{
 
                 let updatedRecord = await InventoryCategory.update({ 
                     categoryName
-                  }, {where: {categoryId: req.body.categoryId.trim()}})
+                  }, {where: {categoryId: req.body.categoryId.trim()},returning:true})
 
                   return res.status(200).json({
                     message:'Successful'
@@ -331,13 +429,14 @@ exports.all_product_statistic = async (req,res,next)=>{
       
         const matched = await v.check()
         if(matched){
-            let limit = 20
+            let limit = 5
             let page = req.params.page
             let offset = (page - 1) * limit
             const company = await Inventory.findAll({
                 limit:limit, offset:offset,
                 where:{},
-                attributes: ['inventoryId','productName','productImage','productDescription','productName','productMeasure'],
+                order:[['createdAt', 'DESC']],
+                attributes: ['inventoryId','productName','productPrice', 'productImage','productPercent','productDescription','productMeasure'],
                 // include: [Inventory.Category]
                 include: [
                     {
@@ -347,6 +446,8 @@ exports.all_product_statistic = async (req,res,next)=>{
                     }
                 ]
             })
+            // let j = company.map(e=>inventoryId)
+            console.log(page, company[0])
             return res.status(201).json({
                 message:'Success',
                 products:company
@@ -379,7 +480,8 @@ exports.all_categories = async (req,res,next)=>{
                 where:{},
                 attributes: ['categoryId','categoryName']
             })
-            return res.status(201).json({
+            console.log(company)
+            return res.status(200).json({
                 message:'Success',
                 categories:company
             });
@@ -507,7 +609,7 @@ exports.all_my_orders = async (req,res,next)=>{
             const company = await TransactionReceipt.findAll({
                 limit:limit, offset:offset,
                 where:{customerId:req.userInfo.userId},
-                attributes: ['receiptId','paymentType'],
+                attributes: ['receiptId','paymentType','createdAt'],
                 include: [
                     {
                         model: DeliveryLocation,
@@ -570,6 +672,10 @@ exports.save_new_orders = async (req,res,next)=>{
             },{ transaction: t })
             let allOrders = req.body.orders
             //save all the orders
+            // const captains = await Captain.bulkCreate([
+            //     { name: 'Jack Sparrow' },
+            //     { name: 'Davy Jones' }
+            //   ]);
             for(let i = 0, j = allOrders.length; i < j; i++ ){
                 let receipty  = await Transaction.create({
                     transactionReceipt:receipt.receiptId,
@@ -591,6 +697,148 @@ exports.save_new_orders = async (req,res,next)=>{
         return res.status(500).json({
             message:'Fail',
             error:error.name
+        });
+    }
+}
+
+//wishlist
+exports.add_to_wish_list = async (req,res,next)=>{
+    try {
+        const v = new Validator(req.body, {
+            productId:"required|string"
+        })
+        const matched = await v.check()
+        console.log(v.errors)
+        if(matched){
+            let wishExist = await WishList.findOne({ 
+                    where: {
+                        productId: req.body.productId.trim(), 
+                        customerId : req.userInfo.userId
+                    }
+                }
+            )
+            if(!wishExist){
+                let receipt  = await WishList.create({
+                    productId: req.body.productId.trim(),
+                    customerId:req.userInfo.userId
+                })
+                return res.status(200).json({
+                    message:'Success',
+                });
+            }
+        }
+        return res.status(406).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error.name
+        });
+    }
+}
+
+exports.remove_from_wish_list = async (req,res,next)=>{
+    try {
+        // console.log(req.body)
+        const v = new Validator(req.body, {
+            wishId:"required|string"
+        })
+        const matched = await v.check()
+        console.log(v.errors)
+        if(matched){
+            let deleteItem =  await WishList.destroy({
+                where: {
+                    id: req.body.wishId.trim(), 
+                    customerId : req.userInfo.userId
+                }
+            });
+            return res.status(200).json({
+                message:'Success',
+            });
+        }
+        return res.status(406).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error.name
+        });
+    }
+}
+
+
+exports.all_my_wishlist = async (req,res,next)=>{
+    try {
+        const v = new Validator(req.params, {
+            page:"required|decimal"
+        })
+      
+        const matched = await v.check()
+        if(matched){
+            let limit = 20
+            let page = req.params.page
+            let offset = (page - 1) * limit
+            const company = await WishList.findAll({
+                limit:limit, offset:offset,
+                where:{customerId:req.userInfo.userId},
+                attributes: ['id'],
+                include:{
+                        model: Inventory,
+                        as: "productInfo",
+                        attributes: ['inventoryId','productName','productPrice', 'productImage','productPercent','productDescription','productMeasure'],
+                        include:{
+                            model: InventoryCategory,
+                            as: "Category",
+                            attributes: ['categoryName'],
+                        }
+                    }
+            })
+            return res.status(200).json({
+                message:'Success',
+                wishlist:company
+            });
+        }
+        return res.status(406).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error.name
+        });
+    }
+}
+
+exports.search_user = async (req,res,next)=>{
+    try {
+        const v = new Validator(req.body, {
+            search: "required|string",
+        })
+        const matched = await v.check()
+        if(matched){
+            let userExist = await UsersInformation.findAll({ where: {
+                    [Op.or]: [
+                        {email: { [Op.substring]:req.body.search.trim()}},
+                        {firstName: { [Op.substring]:req.body.search.trim()}},
+                        {lastName: { [Op.substring]:req.body.search.trim()}},
+                        {phone: { [Op.substring]:req.body.search.trim()}},
+                    ]
+                }
+            })
+            return res.status(200).json({
+                message:'Created',
+                userInformation:userExist
+            });
+        }
+        return res.status(422).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
         });
     }
 }

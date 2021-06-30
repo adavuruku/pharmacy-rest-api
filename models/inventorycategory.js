@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       unique:true,
       type: DataTypes.INTEGER
     },
-    categoryId: {type: DataTypes.UUID,allowNull:false,primaryKey:true,},
+    categoryId: {type: DataTypes.UUID,allowNull:false,primaryKey:true},
     categoryName: {type: DataTypes.STRING,allowNull:false},
   }, {
     sequelize,

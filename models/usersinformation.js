@@ -9,6 +9,10 @@ module.exports = (sequelize, DataTypes) => {
           foreignKey : 'customerId',
           as : 'Orders'
       });
+      UsersInformation.hasMany(models.WishList,{
+        foreignKey : 'customerId',
+        as : 'WishList'
+      });
       UsersInformation.hasMany(models.DeliveryLocation,{
         foreignKey : 'customerId',
         as : 'Locations'
