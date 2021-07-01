@@ -5,6 +5,8 @@ const argon2 = require('argon2')
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
 
+const {users, products, categories} = require('./mockups')
+
 const {UsersInformation,InventoryCategory,WishList,Inventory,TransactionReceipt,Transaction,DeliveryLocation} = require('../../models/index');
 
 let generateToken = (email,userId) =>{
@@ -964,4 +966,23 @@ exports.testing_fetches = async (req,res,next)=>{
             error:error
         });
     }
+}
+
+
+exports.record_for_insert = async (req,res,next)=>{
+    // try {
+        // let userExist = await UsersInformation.findAll({})
+        //save all the orders
+        const captains = await UsersInformation.bulkCreate([
+            users
+        ]);
+        return res.status(200).json({
+            message:'Success',users
+        });
+    // } catch (error) {
+    //     return res.status(500).json({
+    //         message:'Fail',
+    //         error:error
+    //     });
+    // }
 }

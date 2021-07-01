@@ -10,6 +10,8 @@ npx sequelize-cli db:migrate:undo:all
 
 npx sequelize-cli migration:create --name modify_users_add_new_fields
 
+npx sequelize-cli model:generate --name User --attributes firstName:string,lastName:string,email:string
+
 Admin - Sheri
 Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbEFkZHJlc3MiOiJzaGVyaWZAZ21haWwuY29tIiwidXNlcklkIjoiNGVmMDNjYTctYjU1OS00OTQwLTk5YzEtZDc1NDQ5OGJjYjliIiwiaWF0IjoxNjIxODc4MzQwfQ.iTOeHE2408XKAo54muIs-vMM-x5pGn9_tbn7ix7Achc
 

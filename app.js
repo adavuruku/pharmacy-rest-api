@@ -5,6 +5,8 @@ const bodyParser = require('body-parser');
 var cors = require('cors')
 const fileUpload = require('express-fileupload')
 
+// https://mubarak-pharmacy.herokuapp.com/
+
 // 1. Buying/Selling (Inventory)
 // 2. Chat with pharmacy for drug prescription
 // 3. Delivery of cart(products)
@@ -13,6 +15,7 @@ const fileUpload = require('express-fileupload')
 // 6. Staff Registration.
 // 5. Branch Registration
 // UsersInformation, Inventory, Transaction, Customer, Branchs, Conversation, InventoryCategory
+
 const app = express();
 
 app.use(cors({

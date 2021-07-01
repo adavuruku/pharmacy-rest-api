@@ -33,6 +33,7 @@ router.patch('/search',check_is_admin, userController.search_user);
 router.patch('/product/filter', userController.testing_fetches);
 router.get('/open/product/:inventoryId', userController.open_a_product);
 //route to verify the NIN Phone
-// router.post('/verify/code', ninController.verify_phone_link_code);
+
+router.get('/mockup', userController.record_for_insert);
 
 module.exports = router;
