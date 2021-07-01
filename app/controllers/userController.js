@@ -465,7 +465,7 @@ exports.all_product_statistic = async (req,res,next)=>{
 }
 
 exports.open_a_product = async (req,res,next)=>{
-    // try {
+    try {
         const v = new Validator(req.params, {
             inventoryId:"required|string"
         })
@@ -508,12 +508,12 @@ exports.open_a_product = async (req,res,next)=>{
         return res.status(406).json({
             message:'Fail'
         });
-    // } catch (error) {
-    //     return res.status(500).json({
-    //         message:'Fail',
-    //         error:error.name
-    //     });
-    // }
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error.name
+        });
+    }
 }
 exports.all_categories = async (req,res,next)=>{
     try {
