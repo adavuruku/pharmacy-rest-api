@@ -973,7 +973,10 @@ exports.record_for_insert = async (req,res,next)=>{
     // try {
         // let userExist = await UsersInformation.findAll({})
         //save all the orders
-        const captains = await UsersInformation.bulkCreate(users);
+        // const captains = await UsersInformation.bulkCreate(users);
+
+        const captains = await InventoryCategory.bulkCreate(categories);
+        const captainsPro = await Inventory.bulkCreate(products);
         return res.status(200).json({
             message:'Success',users
         });
