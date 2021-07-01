@@ -31,8 +31,7 @@ router.delete('/wishlist/remove',check_is_Active, userController.remove_from_wis
 router.get('/wishlist/all/:page',check_is_Active, userController.all_my_wishlist);
 router.patch('/search',check_is_admin, userController.search_user);
 router.patch('/product/filter', userController.testing_fetches);
-
-
+router.get('/open/product/:inventoryId', userController.open_a_product);
 //route to verify the NIN Phone
 // router.post('/verify/code', ninController.verify_phone_link_code);
 

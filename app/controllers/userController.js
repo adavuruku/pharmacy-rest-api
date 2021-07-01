@@ -464,6 +464,57 @@ exports.all_product_statistic = async (req,res,next)=>{
     }
 }
 
+exports.open_a_product = async (req,res,next)=>{
+    // try {
+        const v = new Validator(req.params, {
+            inventoryId:"required|string"
+        })
+      
+        const matched = await v.check()
+        if(matched){
+           
+            const company = await Inventory.findOne({
+                where:{inventoryId:req.params.inventoryId},
+                attributes: ['inventoryId','productName','productPrice', 'productImage','productPercent','productDescription','productMeasure'],
+                include: [
+                    {
+                        model: InventoryCategory,
+                        as: "Category",
+                        attributes: ['categoryId','categoryName']
+                    }
+                ]
+            })
+            // console.log(company.Category.categoryId)
+            if(company){
+                const companyAll = await Inventory.findAll({
+                    limit:4,
+                    where:{productCategory:company.Category.categoryId},
+                    attributes: ['inventoryId','productName','productPrice', 'productImage','productPercent','productDescription','productMeasure'],
+                    include: [
+                        {
+                            model: InventoryCategory,
+                            as: "Category",
+                            attributes: ['categoryId','categoryName']
+                        }
+                    ]
+                })
+                return res.status(200).json({
+                    message:'Success',
+                    related:companyAll,
+                    product:company
+                });
+            }
+        }
+        return res.status(406).json({
+            message:'Fail'
+        });
+    // } catch (error) {
+    //     return res.status(500).json({
+    //         message:'Fail',
+    //         error:error.name
+    //     });
+    // }
+}
 exports.all_categories = async (req,res,next)=>{
     try {
         const v = new Validator(req.params, {
@@ -845,7 +896,7 @@ exports.search_user = async (req,res,next)=>{
 
 
 exports.testing_fetches = async (req,res,next)=>{
-    // try {
+    try {
         console.log(req.body)
         const v = new Validator(req.body, {
             filter: "required|object",
@@ -907,10 +958,10 @@ exports.testing_fetches = async (req,res,next)=>{
         return res.status(406).json({
             message:'Fail'
         });
-    // } catch (error) {
-    //     return res.status(500).json({
-    //         message:'Fail',
-    //         error:error
-    //     });
-    // }
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
 }
