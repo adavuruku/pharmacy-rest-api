@@ -18,7 +18,7 @@ router.post('/product/category/add', check_is_admin, userController.add_product_
 router.post('/product/add', check_is_admin, userController.add_product_to_category);
 router.patch('/product/update', check_is_admin, userController.update_product);
 router.get('/product/all/:page', userController.all_product_statistic);
-router.get('/category/all/:page',check_is_Active, userController.all_categories);
+router.get('/category/all/:page', userController.all_categories);
 router.get('/consultants/all/:page',check_is_Active, userController.all_consultants);
 router.patch('/category/update',check_is_Active, userController.update_category);
 router.get('/my/orders/all/:page',check_is_Active, userController.all_my_orders);
@@ -30,6 +30,7 @@ router.post('/wishlist/add',check_is_Active, userController.add_to_wish_list);
 router.delete('/wishlist/remove',check_is_Active, userController.remove_from_wish_list);
 router.get('/wishlist/all/:page',check_is_Active, userController.all_my_wishlist);
 router.patch('/search',check_is_admin, userController.search_user);
+router.patch('/product/filter', userController.testing_fetches);
 
 
 //route to verify the NIN Phone

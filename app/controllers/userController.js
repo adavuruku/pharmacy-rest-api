@@ -1,4 +1,4 @@
-const {Sequelize,Op} = require('sequelize');
+const {Sequelize,Op, QueryTypes} = require('sequelize');
 const { Validator } = require('node-input-validator')
 const db = require('../../models');
 const argon2 = require('argon2')
@@ -184,7 +184,7 @@ exports.update_user_password = async (req,res,next)=>{
 }
 
 exports.admin_update_user_role = async (req,res,next)=>{
-    // try {
+    try {
         // console.log(req.body)
         const v = new Validator(req.body, {
             email: "required|string",
@@ -206,12 +206,12 @@ exports.admin_update_user_role = async (req,res,next)=>{
         return res.status(422).json({
             message:'Fail'
         });
-    // } catch (error) {
-    //     return res.status(500).json({
-    //         message:'Fail',
-    //         error:error
-    //     });
-    // }
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
 }
 
 exports.login_user = async (req,res,next)=>{
@@ -447,7 +447,7 @@ exports.all_product_statistic = async (req,res,next)=>{
                 ]
             })
             // let j = company.map(e=>inventoryId)
-            console.log(page, company[0])
+            // console.log(page, company[0])
             return res.status(201).json({
                 message:'Success',
                 products:company
@@ -480,7 +480,7 @@ exports.all_categories = async (req,res,next)=>{
                 where:{},
                 attributes: ['categoryId','categoryName']
             })
-            console.log(company)
+            // console.log(company)
             return res.status(200).json({
                 message:'Success',
                 categories:company
@@ -841,4 +841,76 @@ exports.search_user = async (req,res,next)=>{
             error:error
         });
     }
+}
+
+
+exports.testing_fetches = async (req,res,next)=>{
+    // try {
+        console.log(req.body)
+        const v = new Validator(req.body, {
+            filter: "required|object",
+            page: "required|decimal",
+        })
+        const matched = await v.check()
+        if(matched){
+            let limit = 10
+            let page = req.body.page
+            let offset = (page - 1) * limit
+            
+            let condition = {}
+            //t f
+            if(req.body.filter.category != 'All' && req.body.filter.range == null ){
+                condition =  {productCategory:req.body.filter.category}
+            }
+            // f t
+            if(req.body.filter.category == 'All' && req.body.filter.range != null ){
+                condition =  { 
+                    productPrice:{
+                        [Op.between]: [req.body.filter.range.start, req.body.filter.range.end]
+                    }
+                }
+            }
+
+            // t t
+            if(req.body.filter.category != 'All' && req.body.filter.range != null ){
+                console.log('e reach')
+                condition =  {
+                    [Op.and]: [
+                     {productCategory:req.body.filter.category},
+                     { 
+                            productPrice:{
+                                [Op.between]: [req.body.filter.range.start, req.body.filter.range.end]
+                            }
+                    } 
+                    ]
+                  }
+            }
+            
+            console.log(condition)
+            const products = await Inventory.findAll({
+                limit:limit, offset:offset,
+                where:condition,
+                order:[['createdAt', 'DESC']],
+                attributes: ['inventoryId','productName','productPrice', 'productImage','productPercent','productDescription','productMeasure'],
+                include: [
+                    {
+                        model: InventoryCategory,
+                        as: "Category",
+                        attributes: ['categoryId','categoryName']
+                    }
+                ]
+            })
+            return res.status(200).json({
+                message:'Success',products
+            });
+        }
+        return res.status(406).json({
+            message:'Fail'
+        });
+    // } catch (error) {
+    //     return res.status(500).json({
+    //         message:'Fail',
+    //         error:error
+    //     });
+    // }
 }
