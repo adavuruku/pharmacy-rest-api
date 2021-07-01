@@ -1,3 +1,13 @@
+1. I run the migration to install user information
+    system : npx sequelize-cli db:migrate
+    heroku : heroku run npx sequelize-cli db:migrate
+2. I run the miggration to start from conversation 
+    system :  npx sequelize-cli db:migrate --from 20210426172128-create-conversation.js
+     heroku : heroku run npx sequelize-cli db:migrate --from 20210426172128-create-conversation.js
+3. run the migration again to add the transaction model
+    npx sequelize-cli db:migrate
+
+
 npx sequelize-cli db:migrate --from 20210523160643-create-inventory.js --to 20210523160643-create-inventory.js
 
 --from will skip the filename and start from the next filename
