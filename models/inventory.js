@@ -40,6 +40,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.UUID,
       allowNull: false
     },
+    deleted: {type: DataTypes.BOOLEAN, defaultValue:false}
   }, {
     sequelize,
     modelName: 'Inventory',

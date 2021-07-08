@@ -30,10 +30,18 @@ router.post('/wishlist/add',check_is_Active, userController.add_to_wish_list);
 router.delete('/wishlist/remove',check_is_Active, userController.remove_from_wish_list);
 router.get('/wishlist/all/:page',check_is_Active, userController.all_my_wishlist);
 router.patch('/search',check_is_admin, userController.search_user);
+router.patch('/products/search',check_is_admin, userController.search_products);
 router.patch('/product/filter', userController.testing_fetches);
+router.delete('/products/delete/:inventoryId', check_is_admin, userController.delete_a_products);
 router.get('/open/product/:inventoryId', userController.open_a_product);
 //route to verify the NIN Phone
 
+
+//chats
+
+router.get('/chat/consultants/:toUserId/:isConsultant', check_is_Active, userController.chat_consultants);
+router.post('/chat/add',check_is_Active, userController.add_chat);
+router.get('/chat/my/:userId/:page',check_is_Active, userController.fetch_users_messages);
 router.get('/mockup', userController.record_for_insert);
 
 module.exports = router;

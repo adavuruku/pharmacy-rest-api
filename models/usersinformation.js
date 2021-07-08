@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
     status: {type: DataTypes.BOOLEAN, defaultValue:true},
     isAdmin: {type: DataTypes.BOOLEAN, defaultValue:false},
     isConsultant: {type: DataTypes.BOOLEAN, defaultValue:false},
-
+    online: {type: DataTypes.BOOLEAN, defaultValue:true}
   }, {
     sequelize,
     modelName: 'UsersInformation',

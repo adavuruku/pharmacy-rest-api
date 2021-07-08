@@ -4,10 +4,10 @@ const db = require('../../models');
 const argon2 = require('argon2')
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
-
+// multipleStatements: true -> set this in config file if you want to run mutiple queries
 const {users, products, categories} = require('./mockups')
 
-const {UsersInformation,InventoryCategory,WishList,Inventory,TransactionReceipt,Transaction,DeliveryLocation} = require('../../models/index');
+const {UsersInformation,Conversation, InventoryCategory,WishList,Inventory,TransactionReceipt,Transaction,DeliveryLocation} = require('../../models/index');
 
 let generateToken = (email,userId) =>{
     return jwt.sign({
@@ -17,6 +17,7 @@ let generateToken = (email,userId) =>{
     process.env.MY_HASH_SECRET);
 }
 var cloudinary = require('cloudinary').v2;
+
 
 
 cloudinary.config = ({
@@ -436,7 +437,7 @@ exports.all_product_statistic = async (req,res,next)=>{
             let offset = (page - 1) * limit
             const company = await Inventory.findAll({
                 limit:limit, offset:offset,
-                where:{},
+                where:{deleted:false},
                 order:[['createdAt', 'DESC']],
                 attributes: ['inventoryId','productName','productPrice', 'productImage','productPercent','productDescription','productMeasure'],
                 // include: [Inventory.Category]
@@ -476,7 +477,7 @@ exports.open_a_product = async (req,res,next)=>{
         if(matched){
            
             const company = await Inventory.findOne({
-                where:{inventoryId:req.params.inventoryId},
+                where:{inventoryId:req.params.inventoryId, deleted:false},
                 attributes: ['inventoryId','productName','productPrice', 'productImage','productPercent','productDescription','productMeasure'],
                 include: [
                     {
@@ -897,6 +898,71 @@ exports.search_user = async (req,res,next)=>{
 }
 
 
+exports.search_products = async (req,res,next)=>{
+    try {
+        const v = new Validator(req.body, {
+            search: "required|string",
+        })
+        const matched = await v.check()
+        if(matched){
+            let userExist = await Inventory.findAll({ where: {
+                    [Op.and]: [
+                        {productName: { [Op.substring]:req.body.search.trim()}},
+                        {deleted:false}
+                    ]
+                }, 
+                attributes: ['inventoryId','productName','productPrice', 'productImage','productPercent','productMeasure','productDescription'],
+                include: [
+                    {
+                        model: InventoryCategory,
+                        as: "Category",
+                        attributes: ['categoryId','categoryName']
+                    }
+                ]
+            })
+            return res.status(200).json({
+                message:'Created',
+                products:userExist
+            });
+        }
+        return res.status(422).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
+}
+
+exports.delete_a_products = async (req,res,next)=>{
+    try {
+        const v = new Validator(req.params, {
+            inventoryId: "required|string",
+        })
+        const matched = await v.check()
+        if(matched){
+            let userExist = await Inventory.update({deleted:false},
+                { where: {inventoryId:req.params.inventoryId.trim()},returning: true})
+
+            return res.status(200).json({
+                message:'Success',
+                products:userExist[1][0]
+            });
+        }
+        return res.status(422).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
+}
+
+//product fetching
 exports.testing_fetches = async (req,res,next)=>{
     try {
         console.log(req.body)
@@ -969,6 +1035,7 @@ exports.testing_fetches = async (req,res,next)=>{
 }
 
 
+
 exports.record_for_insert = async (req,res,next)=>{
     // try {
         // let userExist = await UsersInformation.findAll({})
@@ -986,4 +1053,154 @@ exports.record_for_insert = async (req,res,next)=>{
     //         error:error
     //     });
     // }
+}
+
+//chats
+//fetch all consultant
+exports.chat_consultants = async (req,res,next)=>{
+    try {
+        const v = new Validator(req.params, {
+            toUserId: "required|string|minLength:1",
+            isConsultant: "required|boolean",
+        })
+        const matched = await v.check()
+        if(matched){
+            let userExist = []
+            if(req.body.isConsultant === false){
+                //if user is not a consultant fetch only consultants for him -> he can only chat with consultants
+                userExist = await db.sequelize.query(
+                    'SELECT "online", "lastName","isConsultant", "firstName","phone","profileImage","userId", COUNT("content") as unreadMessage FROM "UsersInformations" U LEFT JOIN "Conversations" C ON U."userId" = C."fromUserId" AND "toUserRead" = false and  "toUserId"= :toUserId  WHERE "isConsultant" = true and "userId" <> :userId and "status" = true GROUP BY "userId" ORDER BY unreadMessage desc',
+                    {
+                        replacements: { toUserId: req.params.toUserId.trim(),userId: req.params.toUserId.trim() },
+                        type: QueryTypes.SELECT
+                    }
+                );
+
+            }else{
+
+                //if user is a consultant fetch all users for him
+                userExist = await db.sequelize.query(
+                    'SELECT "online", "lastName","firstName","isConsultant","phone","profileImage","userId", COUNT("content") as unreadMessage FROM "UsersInformations" U LEFT JOIN "Conversations" C ON U."userId" = C."fromUserId" AND "toUserRead" = false and  "toUserId"= :toUserId  WHERE "userId" <> :userId and "status" = true GROUP BY "userId" ORDER BY unreadMessage desc',
+                    {
+                        replacements: { toUserId: req.params.toUserId.trim(),userId: req.params.toUserId.trim() },
+                        type: QueryTypes.SELECT
+                    }
+                );
+            }
+            return res.status(200).json({
+                message:'Created',
+                userInformation:userExist
+            });
+        }
+        return res.status(412).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
+}
+
+
+//fetch all consultant
+exports.fetch_users_messages = async (req,res,next)=>{
+    try {
+        const v = new Validator(req.params, {
+            userId: "required|string|minLength:1",
+            page: "required|decimal",
+        })
+        const matched = await v.check()
+        if(matched){
+            let limit = 5
+            let page = req.params.page
+            let offset = (page - 1) * limit
+            // const chats = await Conversation.findAll({
+            //     limit:limit, offset:offset,
+            //     where:{
+            //         [Op.or]: [
+            //             {
+            //                 [Op.and]:[
+            //                     {toUserId:req.params.userId},
+            //                     {fromUserId:req.userInfo.userId}
+            //                 ]
+            //             },
+            //             {
+            //                 [Op.and]:[
+            //                     {toUserId:req.userInfo.userId},
+            //                     {fromUserId:req.params.userId}
+            //                 ]
+            //             },
+            //         ]
+            //     },
+            //     order:[['createdAt', 'DESC']],
+            //     attributes: ['content','toUserId','fromUserId','id','toUserRead','fromUserRead'],
+            //     include: [
+            //         {
+            //             model: UsersInformation,
+            //             as: "toUser",
+            //             attributes:['profileImage','firstName', 'lastName']
+            //         },{
+            //             model: UsersInformation,
+            //             as: "fromUser",
+            //             attributes:['profileImage','firstName', 'lastName']
+            //         }
+            //     ]
+            // })
+
+            let query = `SELECT "Conversation"."content", "Conversation"."toUserId", "Conversation"."fromUserId", "Conversation"."id", "Conversation"."toUserRead", "Conversation"."fromUserRead","Conversation"."createdAt", "toUser"."userId" As "toUser.userId" , "toUser"."profileImage" AS "toUser.profileImage", "toUser"."firstName" AS "toUser.firstName", "toUser"."lastName" AS "toUser.lastName", 
+            "fromUser"."userId" AS "fromUser.userId", "fromUser"."profileImage" AS "fromUser.profileImage" , "fromUser"."firstName" AS "fromUser.firstName","fromUser"."lastName" AS "fromUser.lastName"  FROM "Conversations" AS "Conversation" LEFT OUTER JOIN "UsersInformations" AS "toUser" ON "Conversation"."toUserId" = "toUser"."userId" LEFT OUTER JOIN "UsersInformations" AS "fromUser" ON "Conversation"."fromUserId" = "fromUser"."userId" WHERE (("Conversation"."toUserId" = '${req.params.userId.trim()}' AND "Conversation"."fromUserId" = '${req.userInfo.userId}') OR ("Conversation"."toUserId" = '${req.userInfo.userId}' AND "Conversation"."fromUserId" = '${req.params.userId.trim()}')) ORDER BY "Conversation"."createdAt" DESC LIMIT ${limit} OFFSET ${offset}`
+
+            const chats = await db.sequelize.query(query,
+                {
+                    type: QueryTypes.SELECT
+                }
+            )
+            // console.log(chats)
+            return res.status(200).json({
+                message:'Successful',
+                chats
+            });
+        }
+        return res.status(412).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
+}
+
+exports.add_chat = async (req,res,next)=>{
+    try {
+        const v = new Validator(req.body, {
+            content: "required|string|minLength:1",
+            toUserId: "required|string|minLength:1",
+        })
+        const matched = await v.check()
+        if(matched){
+            // fromUserId,toUserId,content,fromUserRead,toUserRead
+            let chat = await Conversation.create(
+            {
+                content : req.body.content.trim(),
+                fromUserId:req.userInfo.userId,fromUserRead:true,
+                toUserId:req.body.toUserId.trim()
+            });
+            return res.status(200).json({
+                message:'Created',
+                chat
+            });
+        }
+        return res.status(412).json({
+            message:'Fail'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
 }

@@ -5,11 +5,15 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Conversation extends Model {
     static associate(models) {
-      // define association here
+      Conversation.belongsTo(models.UsersInformation, { as: 'toUser', foreignKey: 'toUserId' });
+      Conversation.belongsTo(models.UsersInformation, { as: 'fromUser', foreignKey: 'fromUserId' });
     }
   };
   Conversation.init({
     id: {
+  //     type: Sequelize.UUID,
+  // defaultValue: Sequelize.UUIDV4,
+  // allowNull: false,
       allowNull: false,
       autoIncrement: true,
       primaryKey:true,
@@ -24,6 +28,9 @@ module.exports = (sequelize, DataTypes) => {
     content: {
       type: DataTypes.TEXT
     },
+    toUserRead: {type: DataTypes.BOOLEAN, defaultValue:false},
+    fromUserRead: {type: DataTypes.BOOLEAN, defaultValue:false}
+
   }, {
     sequelize,
     modelName: 'Conversation',
