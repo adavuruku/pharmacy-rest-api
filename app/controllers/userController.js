@@ -125,7 +125,7 @@ exports.add_new_customer = async (req,res,next)=>{
 
 exports.update_user_information = async (req,res,next)=>{
     try {
-        // console.log(req.body)
+        console.log(req.body)
         const v = new Validator(req.body, {
             firstName: "required|string",
             lastName: "required|string",
@@ -134,8 +134,20 @@ exports.update_user_information = async (req,res,next)=>{
         
         const matched = await v.check()
         if(matched){
+           
+            let userUrl = req.userInfo.profileImage
+            if(req.files?.profileImage){
+                let fileUpload = await cloudinary.uploader.upload(
+                req.files.profileImage.tempFilePath,
+                { 
+                    folder: "pharmacy-products/"
+                })
+
+                userUrl = fileUpload.secure_url
+            }
             let userInformation = await UsersInformation.update({ 
-                firstName:req.body.firstName, lastName:req.body.lastName,phone:req.body.phone
+                firstName:req.body.firstName, lastName:req.body.lastName,
+                phone:req.body.phone,profileImage:userUrl
                 }, {where: {userId: req.userInfo.userId},returning: true})
             return res.status(200).json({
                 message:'Successful',userInformation:userInformation[1][0]
@@ -347,7 +359,7 @@ exports.update_product = async (req,res,next)=>{
         const matched = await v.check()
         if(matched){
             let productExist = await Inventory.findOne({ where: {inventoryId: req.body.productId.trim()}})
-            console.log(productExist.productImage)
+            // console.log(productExist.productImage)
             if(productExist){
                 let productUrl = productExist.productImage
                 if(req.files?.productImage){
@@ -565,7 +577,7 @@ exports.all_consultants = async (req,res,next)=>{
             const company = await UsersInformation.findAll({
                 limit:limit, offset:offset,
                 where:{isConsultant:true},
-                attributes: ['userId','firstName', 'lastName', 'email', 'phone']
+                attributes: ['userId','firstName', 'lastName', 'email', 'phone','profileImage']
             })
             return res.status(201).json({
                 message:'Success',
