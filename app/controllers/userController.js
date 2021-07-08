@@ -91,7 +91,7 @@ exports.add_new_customer = async (req,res,next)=>{
             phone: "required|phoneNumber"
         })
         const matched = await v.check()
-        console.log(req.body)
+        // console.log(req.body)
         if(!matched){
             return res.status(412).json({
                 message:'Invalid Data Input'
@@ -125,7 +125,7 @@ exports.add_new_customer = async (req,res,next)=>{
 
 exports.update_user_information = async (req,res,next)=>{
     try {
-        console.log(req.body)
+        // console.log(req.body)
         const v = new Validator(req.body, {
             firstName: "required|string",
             lastName: "required|string",
@@ -726,7 +726,7 @@ exports.save_new_orders = async (req,res,next)=>{
 
         
         const matched = await v.check()
-        console.log(v.errors)
+        // console.log(v.errors)
         if(matched){
             //create receipt
             let receiptId = uuidv4();
@@ -774,7 +774,7 @@ exports.add_to_wish_list = async (req,res,next)=>{
             productId:"required|string"
         })
         const matched = await v.check()
-        console.log(v.errors)
+        // console.log(v.errors)
         if(matched){
             let wishExist = await WishList.findOne({ 
                     where: {
@@ -811,7 +811,7 @@ exports.remove_from_wish_list = async (req,res,next)=>{
             wishId:"required|string"
         })
         const matched = await v.check()
-        console.log(v.errors)
+        // console.log(v.errors)
         if(matched){
             let deleteItem =  await WishList.destroy({
                 where: {
@@ -977,7 +977,7 @@ exports.delete_a_products = async (req,res,next)=>{
 //product fetching
 exports.testing_fetches = async (req,res,next)=>{
     try {
-        console.log(req.body)
+        // console.log(req.body)
         const v = new Validator(req.body, {
             filter: "required|object",
             page: "required|decimal",
@@ -1004,7 +1004,6 @@ exports.testing_fetches = async (req,res,next)=>{
 
             // t t
             if(req.body.filter.category != 'All' && req.body.filter.range != null ){
-                console.log('e reach')
                 condition =  {
                     [Op.and]: [
                      {productCategory:req.body.filter.category},
@@ -1017,7 +1016,7 @@ exports.testing_fetches = async (req,res,next)=>{
                   }
             }
             
-            console.log(condition)
+            // console.log(condition)
             const products = await Inventory.findAll({
                 limit:limit, offset:offset,
                 where:condition,
