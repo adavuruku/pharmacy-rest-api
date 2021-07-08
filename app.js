@@ -31,6 +31,7 @@ app.use(bodyParser.json());
 const usersRoutes = require('./app/routes/userRoute');
 // const ninRoutes = require('./app/routes/ninRoute');
 
+// heroku platform is the sanienesi@gmail.com
 app.use('/api/user',usersRoutes);
 // app.use('/api/user',ninRoutes);
 

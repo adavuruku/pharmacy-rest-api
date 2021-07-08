@@ -943,7 +943,7 @@ exports.delete_a_products = async (req,res,next)=>{
         })
         const matched = await v.check()
         if(matched){
-            let userExist = await Inventory.update({deleted:false},
+            let userExist = await Inventory.update({deleted:true},
                 { where: {inventoryId:req.params.inventoryId.trim()},returning: true})
 
             return res.status(200).json({
