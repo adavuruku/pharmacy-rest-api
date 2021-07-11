@@ -82,7 +82,7 @@ exports.add_new_user = async (req,res,next)=>{
 }
 
 exports.add_new_customer = async (req,res,next)=>{
-    try {
+    // try {
         const v = new Validator(req.body, {
             firstName: "required|string|minLength:1",
             lastName: "required|string|minLength:1",
@@ -117,12 +117,12 @@ exports.add_new_customer = async (req,res,next)=>{
         return res.status(422).json({
             message:'Fail'
         });
-    } catch (error) {
-        return res.status(500).json({
-            message:'Fail',
-            error:error
-        });
-    }
+    // } catch (error) {
+    //     return res.status(500).json({
+    //         message:'Fail',
+    //         error:error
+    //     });
+    // }
 }
 
 exports.update_user_information = async (req,res,next)=>{
