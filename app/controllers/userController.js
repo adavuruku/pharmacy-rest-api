@@ -91,12 +91,9 @@ exports.add_new_customer = async (req,res,next)=>{
             phone: "required|phoneNumber"
         })
         const matched = await v.check()
-        // console.log(req.body)
-        if(!matched){
-            return res.status(412).json({
-                message:'Invalid Data Input'
-            });
-        }else{
+        console.log(v.errors)
+        console.log(req.body)
+        if(matched){
             let hashVerificationCode = await argon2.hash(req.body.password,process.env.MY_ARGON_SALT)
             let userId = uuidv4();
             //create new user
@@ -109,12 +106,17 @@ exports.add_new_customer = async (req,res,next)=>{
                 userId:userId,
                 password : hashVerificationCode
             });
+            console.log('e enter here')
             const tokenValue = generateToken(userInformation.email,userInformation.userId)
             return res.status(200).json({
                 message:'Created',
                 userInformation, tokenValue
             });
+            
         }
+        return res.status(422).json({
+            message:'Fail'
+        });
     } catch (error) {
         return res.status(500).json({
             message:'Fail',
@@ -717,7 +719,7 @@ exports.all_my_orders = async (req,res,next)=>{
 
 exports.save_new_orders = async (req,res,next)=>{
     const t = await db.sequelize.transaction();
-    // try {
+    try {
         const v = new Validator(req.body, {
             orders:"required|array",
             locationId:"required|string", 
@@ -726,9 +728,8 @@ exports.save_new_orders = async (req,res,next)=>{
 
         
         const matched = await v.check()
-        console.log(v.errors)
+        // console.log(v.errors)
         if(matched){
-            console.log('No error -> e enter here')
             //create receipt
             let receiptId = uuidv4();
             let receipt  = await TransactionReceipt.create({
@@ -759,13 +760,13 @@ exports.save_new_orders = async (req,res,next)=>{
         return res.status(406).json({
             message:'Fail'
         });
-    // } catch (error) {
-    //     await t.rollback();
-    //     return res.status(500).json({
-    //         message:'Fail',
-    //         error:error.name
-    //     });
-    // }
+    } catch (error) {
+        await t.rollback();
+        return res.status(500).json({
+            message:'Fail',
+            error:error.name
+        });
+    }
 }
 
 //wishlist
