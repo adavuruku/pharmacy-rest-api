@@ -93,7 +93,7 @@ module.exports.check_is_Active = async (req, res, next)=>{
                 req.userInfo = userExist
                 next();
             }else{
-                console.log('na o, ',token)
+                // console.log('na o, ',token)
                 res.status(422).json({
                     message:'Authentication Fail'
                 });
