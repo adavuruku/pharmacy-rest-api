@@ -738,7 +738,7 @@ exports.all_my_orders = async (req,res,next)=>{
 
 exports.save_new_orders = async (req,res,next)=>{
     const t = await db.sequelize.transaction();
-    try {
+    // try {
         const v = new Validator(req.body, {
             orders:"required|array",
             locationId:"required|string", 
@@ -747,7 +747,8 @@ exports.save_new_orders = async (req,res,next)=>{
 
         
         const matched = await v.check()
-        // console.log(v.errors)
+        console.log(v.errors)
+        console.log(req.body)
         if(matched){
             //create receipt
             let receiptId = uuidv4();
@@ -779,13 +780,13 @@ exports.save_new_orders = async (req,res,next)=>{
         return res.status(406).json({
             message:'Fail'
         });
-    } catch (error) {
-        await t.rollback();
-        return res.status(500).json({
-            message:'Fail',
-            error:error.name
-        });
-    }
+    // } catch (error) {
+    //     await t.rollback();
+    //     return res.status(500).json({
+    //         message:'Fail',
+    //         error:error.name
+    //     });
+    // }
 }
 
 //wishlist
