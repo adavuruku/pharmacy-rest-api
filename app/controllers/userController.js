@@ -562,6 +562,7 @@ exports.all_categories = async (req,res,next)=>{
             const company = await InventoryCategory.findAll({
                 limit:limit, offset:offset,
                 where:{},
+                order:[['categoryName', 'ASC']],
                 attributes: ['categoryId','categoryName']
             })
             // console.log(company)
@@ -662,6 +663,7 @@ exports.all_locations = async (req,res,next)=>{
             const company = await DeliveryLocation.findAll({
                 limit:limit, offset:offset,
                 where:{customerId:req.userInfo.userId},
+                order:[['createdAt', 'DESC']],
                 attributes: ['locationId','locationState', 'locationAddress', 'locationLocalGovt']
             })
             return res.status(200).json({
@@ -693,6 +695,7 @@ exports.all_my_orders = async (req,res,next)=>{
             const company = await TransactionReceipt.findAll({
                 limit:limit, offset:offset,
                 where:{customerId:req.userInfo.userId},
+                order:[['createdAt', 'DESC']],
                 attributes: ['receiptId','paymentType','createdAt'],
                 include: [
                     {
@@ -707,7 +710,7 @@ exports.all_my_orders = async (req,res,next)=>{
                         include:{
                                 model: Inventory,
                                 as: "productInfo",
-                                attributes: ['productName', 'productDescription','productMeasure'],
+                                attributes: ['productName', 'productDescription','productMeasure','productImage'],
                                 include:{
                                     model: InventoryCategory,
                                     as: "Category",
@@ -867,6 +870,7 @@ exports.all_my_wishlist = async (req,res,next)=>{
             const company = await WishList.findAll({
                 limit:limit, offset:offset,
                 where:{customerId:req.userInfo.userId},
+                order:[['createdAt', 'DESC']],
                 attributes: ['id'],
                 include:{
                         model: Inventory,
