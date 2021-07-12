@@ -14,6 +14,7 @@ router.patch('/customer/update/password', check_is_Active, userController.update
 router.patch('/role/update', check_is_admin, userController.admin_update_user_role);
 
 router.post('/login', userController.login_user);
+router.get('/logout', check_is_Active, userController.logout_user);
 router.post('/product/category/add', check_is_admin, userController.add_product_category);
 router.post('/product/add', check_is_admin, userController.add_product_to_category);
 router.patch('/product/update', check_is_admin, userController.update_product);

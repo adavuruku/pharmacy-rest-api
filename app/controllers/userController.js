@@ -82,7 +82,7 @@ exports.add_new_user = async (req,res,next)=>{
 }
 
 exports.add_new_customer = async (req,res,next)=>{
-    // try {
+    try {
         const v = new Validator(req.body, {
             firstName: "required|string|minLength:1",
             lastName: "required|string|minLength:1",
@@ -91,8 +91,8 @@ exports.add_new_customer = async (req,res,next)=>{
             phone: "required|phoneNumber"
         })
         const matched = await v.check()
-        console.log(v.errors)
-        console.log(req.body)
+        // console.log(v.errors)
+        // console.log(req.body)
         if(matched){
             let hashVerificationCode = await argon2.hash(req.body.password,process.env.MY_ARGON_SALT)
             let userId = uuidv4();
@@ -106,7 +106,6 @@ exports.add_new_customer = async (req,res,next)=>{
                 userId:userId,
                 password : hashVerificationCode
             });
-            console.log('e enter here')
             const tokenValue = generateToken(userInformation.email,userInformation.userId)
             return res.status(200).json({
                 message:'Created',
@@ -117,12 +116,12 @@ exports.add_new_customer = async (req,res,next)=>{
         return res.status(422).json({
             message:'Fail'
         });
-    // } catch (error) {
-    //     return res.status(500).json({
-    //         message:'Fail',
-    //         error:error
-    //     });
-    // }
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
 }
 
 exports.update_user_information = async (req,res,next)=>{
@@ -158,6 +157,23 @@ exports.update_user_information = async (req,res,next)=>{
         return res.status(422).json({
             message:'Fail'
         });
+    } catch (error) {
+        return res.status(500).json({
+            message:'Fail',
+            error:error
+        });
+    }
+}
+
+exports.logout_user = async (req,res,next)=>{
+    try {
+        let userInformation = await UsersInformation.update({ 
+            online:false
+            }, {where: {userId: req.userInfo.userId}})
+        return res.status(200).json({
+            message:'Successful'
+        });
+    
     } catch (error) {
         return res.status(500).json({
             message:'Fail',
