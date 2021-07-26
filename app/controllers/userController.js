@@ -747,8 +747,6 @@ exports.save_new_orders = async (req,res,next)=>{
 
         
         const matched = await v.check()
-        console.log(v.errors)
-        console.log(req.body)
         if(matched){
             //create receipt
             let receiptId = uuidv4();
